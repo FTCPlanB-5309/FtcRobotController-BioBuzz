@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -13,25 +15,35 @@ public class DriveTrain {
     Telemetry telemetry;
     LinearOpMode opMode;
 
-    double lfVectorSpeed = 0;
-    double lrVectorSpeed = 0;
-    double rfVectorSpeed = 0;
-    double rrVectorSpeed = 0;
+    double lfVectorSpeed;
+    double lrVectorSpeed;
+    double rfVectorSpeed;
+    double rrVectorSpeed;
 
-    double lfTurnSpeed = 0;
-    double lrTurnSpeed = 0;
-    double rfTurnSpeed = 0;
-    double rrTurnSpeed = 0;
+    double lfTurnSpeed;
+    double lrTurnSpeed;
+    double rfTurnSpeed;
+    double rrTurnSpeed;
 
-    double lfSpeed = 0;
-    double lrSpeed = 0;
-    double rfSpeed = 0;
-    double rrSpeed = 0;
+    double lfSpeed;
+    double lrSpeed;
+    double rfSpeed;
+    double rrSpeed;
 
-    double speedFactor = 0;
+    double speedFactor;
+
+    double diff_x;
+    double diff_y;
+    double diff_h;
+    double distanceToTarget;
+
+    double x2;
+    double y2;
 
 
-    public DriveTrain(RobotHardware robot, Telemetry telemetry, LinearOpMode opMode){
+    public DriveTrain(RobotHardware robot,
+                      Telemetry telemetry,
+                      LinearOpMode opMode) throws InterruptedException {
         this.robot = robot;
         this.telemetry = telemetry;
         this.opMode = opMode;
@@ -39,7 +51,7 @@ public class DriveTrain {
 
     public void stop()
     {
-        robot.leftFrontMotor.setPower(0);
+        robot.LeftFrontMotor.setPower(0);
         robot.RightFrontMotor.setPower(0);
         robot.LeftRearMotor.setPower(0);
         robot.RightRearMotor.setPower(0);
@@ -47,10 +59,19 @@ public class DriveTrain {
 
     public void turnMotorsOn()
     {
-        robot.leftFrontMotor.setPower(lfSpeed);
+        robot.LeftFrontMotor.setPower(lfSpeed);
         robot.RightFrontMotor.setPower(rfSpeed);
         robot.LeftRearMotor.setPower(lrSpeed);
         robot.RightRearMotor.setPower(rrSpeed);
+    }
+
+    // This method determines the distance to the target and also
+    // sets diff_x and diff_y values
+    public void getDistanceToTarget(Pose2D pos, Target target)
+    {
+        diff_x = target.x - pos.getX(DistanceUnit.CM);
+        diff_y = target.y - pos.getY(DistanceUnit.CM);
+        distanceToTarget = Math.sqrt(diff_x * diff_x + diff_y * diff_y);
     }
 
     //
@@ -60,30 +81,32 @@ public class DriveTrain {
     // are set to drive the robot to the target, but ignores the angle it's facing
     // when it gets there
     //
-    public void findMotorVectorSpeed (Target target, Pose2D pos)
+    public void findMotorVectorSpeed (Target target, Pose2D pos) throws InterruptedException
     {
         double sin;
         double cos;
         double denominator;
 
-        target.setDistanceFromRobot(pos);
-        sin = Math.sin(-pos.getHeading(AngleUnit.RADIANS));
-        cos = Math.cos(-pos.getHeading(AngleUnit.RADIANS));
+        getDistanceToTarget(pos, target);
+        //telemetry.addData("distance to target", distanceToTarget);
+
+        sin = Math.sin(pos.getHeading(AngleUnit.RADIANS));
+        cos = Math.cos(pos.getHeading(AngleUnit.RADIANS));
         //x2=cosβx1−sinβy1
         //y2=sinβx1+cosβy1
-        double x2 = (cos * target.diff_x) - (sin * target.diff_y);
-        double y2 = (sin * target.diff_x) + (cos * target.diff_y);
+        x2 = (cos * diff_x) - (sin * diff_y);
+        y2 = (sin * diff_x) + (cos * diff_y);
         denominator = Math.max(Math.abs(y2) + Math.abs(x2), 1);
 
-        lfVectorSpeed = (x2 + y2 ) / denominator;
-        rfVectorSpeed = (x2 - y2 ) / denominator;
-        lrVectorSpeed = (x2 - y2 ) / denominator;
-        rrVectorSpeed = (x2 + y2 ) / denominator;
+        lfVectorSpeed = (x2 - y2 ) / denominator;
+        rfVectorSpeed = (x2 + y2 ) / denominator;
+        lrVectorSpeed = (x2 + y2 ) / denominator;
+        rrVectorSpeed = (x2 - y2 ) / denominator;
 
-        if (target.distanceToRobot > target.tp.StartToSlowAt )
+        if (distanceToTarget > target.tp.StartToSlowAt )
             speedFactor = target.tp.maxSpeed;
         else
-            speedFactor = (target.distanceToRobot / target.tp.StartToSlowAt) * target.tp.maxSpeed;
+            speedFactor = (distanceToTarget / target.tp.StartToSlowAt) * target.tp.maxSpeed;
 
         lfVectorSpeed = lfVectorSpeed * speedFactor;
         rfVectorSpeed = rfVectorSpeed * speedFactor;
@@ -96,15 +119,15 @@ public class DriveTrain {
     // vector speeds to determine actual motor speeds required.
     public void findMotorTurnSpeeds (Target target, Pose2D pos) {
         double speedFactor;   // between .07 and 1 as needed
-        target.setDifferenceInAngle(pos);
-        if (target.diff_h < target.tp.angleVarianceAllowed)
+        diff_h = target.findDifferenceInAngle(pos, target);
+        if (diff_h < target.tp.angleVarianceAllowed)
             speedFactor = 0;
 
         else {
-            if (target.diff_h >= 100)
+            if (diff_h >= 100)
                 speedFactor = 1;  //upper speed factor
             else
-                speedFactor = target.diff_h / 100;
+                speedFactor = diff_h / 100;
             if (speedFactor < .07)
                 speedFactor = .07;  // lower speed factor
         }
@@ -132,10 +155,15 @@ public class DriveTrain {
         double rfDenominator = rfVectorSpeed + rfTurnSpeed;
         double rrDenominator = rrVectorSpeed + rrTurnSpeed;
 
-        lfSpeed = lfVectorSpeed/lfDenominator + lfTurnSpeed/lfDenominator;
-        lrSpeed = lrVectorSpeed/lrDenominator + lrTurnSpeed/lrDenominator;
-        rfSpeed = rfVectorSpeed/rfDenominator + rfTurnSpeed/rfDenominator;
-        rrSpeed = rrVectorSpeed/rrDenominator + rrTurnSpeed/rrDenominator;
+        lfSpeed = lfVectorSpeed + lfTurnSpeed;
+        lrSpeed = lrVectorSpeed + lrTurnSpeed;
+        rfSpeed = rfVectorSpeed + rfTurnSpeed;
+        rrSpeed = rrVectorSpeed + rrTurnSpeed;
+
+//        lfSpeed = lfVectorSpeed/lfDenominator + lfTurnSpeed/lfDenominator;
+//        lrSpeed = lrVectorSpeed/lrDenominator + lrTurnSpeed/lrDenominator;
+//        rfSpeed = rfVectorSpeed/rfDenominator + rfTurnSpeed/rfDenominator;
+//        rrSpeed = rrVectorSpeed/rrDenominator + rrTurnSpeed/rrDenominator;
     }
 
     // This method checks to status of the goTo command...Time, x, y, and angle
@@ -145,17 +173,18 @@ public class DriveTrain {
         double diff_x;
         double diff_y;
 
-        target.setDistanceFromRobot(pos);
+        getDistanceToTarget(pos, target);
         if (runtime.seconds() >= target.tp.timeAllowed)
             return MoveCodes.TimedOut;
-        if (target.distanceToRobot > target.tp.distanceVarianceAllowed ||
+        if (distanceToTarget > target.tp.distanceVarianceAllowed ||
             Math.abs(pos.getHeading(AngleUnit.DEGREES) - target.h) > target.tp.angleVarianceAllowed)
             return MoveCodes.NotDone;
         return MoveCodes.Done;
     }
 
     // This method gets the robot to move to the desired target
-    public MoveCodes goTo(Target target) {
+    public MoveCodes goTo(Target target) throws InterruptedException {
+        int loopCount = 0;
         MoveCodes moveCode = MoveCodes.NotDone;
         ElapsedTime runtime = new ElapsedTime();   // time the move
         runtime.reset();
@@ -173,7 +202,36 @@ public class DriveTrain {
 
             // get the status of the move (position and time)
             moveCode = goToStatus(runtime, target, pos);
+            loopCount++;
+            if (loopCount > 300)
+                moveCode = MoveCodes.Diagnostic;
         }
+        pos = robot.pinpoint.getPosition();
+        telemetry.addData("lfVectorSpeed", lfVectorSpeed);
+        telemetry.addData("lrVectorSpeed", lrVectorSpeed);
+        telemetry.addData("rfVectorSpeed", rfVectorSpeed);
+        telemetry.addData("rrVectorSpeed", rrVectorSpeed);
+        telemetry.addData("pos: ","x: %.2f, y: %.2f, h: %.2f",
+                pos.getX(DistanceUnit.CM),
+                pos.getY(DistanceUnit.CM),
+                pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("distance to target",distanceToTarget );
+        telemetry.addData("pos: ","diff_x: %.2f, diff_y: %.2f, diff_h: %.2f",
+                diff_x,
+                diff_y,
+                diff_h);
+        telemetry.addData("x2", x2);
+        telemetry.addData("y2",y2);
+        telemetry.addData("lfTurnSpeed", lfTurnSpeed);
+        telemetry.addData("lrTurnSpeed", lrTurnSpeed);
+        telemetry.addData("rfTurnSpeed", rfTurnSpeed);
+        telemetry.addData("rrTurnSpeed", rrTurnSpeed);
+        telemetry.addData("moveCode", moveCode);
+        telemetry.addData("lfSpeed", lfSpeed);
+        telemetry.addData("lrSpeed", lrSpeed);
+        telemetry.addData("rfSpeed", rfSpeed);
+        telemetry.addData("rrSpeed", rrSpeed);
+        telemetry.update();
         stop();  // we ran out of time or we are at the desired location
         return moveCode;
     }

@@ -4,5 +4,6 @@ public enum MoveCodes {
     Done,
     TimedOut,
     OpCodeInactive,
-    NotDone
+    NotDone,
+    Diagnostic
 }

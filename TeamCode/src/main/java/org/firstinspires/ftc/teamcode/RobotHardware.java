@@ -14,7 +14,7 @@ public class RobotHardware {
     private LinearOpMode myOpMode = null;   // gain access to methods in the calling OpMode.
 
     // Define Motor and Servo objects  (Make them private so they can't be accessed externally)
-    public DcMotor leftFrontMotor   = null;
+    public DcMotor LeftFrontMotor = null;
     public DcMotor RightFrontMotor  = null;
     public DcMotor LeftRearMotor = null;
     public DcMotor RightRearMotor = null;
@@ -35,7 +35,7 @@ public class RobotHardware {
      */
     public void init()    {
         // Define and Initialize Motors (note: need to use reference to actual OpMode).
-        leftFrontMotor  = myOpMode.hardwareMap.get(DcMotor.class, "leftFrontMotor");
+        LeftFrontMotor = myOpMode.hardwareMap.get(DcMotor.class, "LeftFrontMotor");
         RightFrontMotor = myOpMode.hardwareMap.get(DcMotor.class, "RightFrontMotor");
         LeftRearMotor  = myOpMode.hardwareMap.get(DcMotor.class, "LeftRearMotor");
         RightRearMotor = myOpMode.hardwareMap.get(DcMotor.class, "RightRearMotor");
@@ -43,13 +43,13 @@ public class RobotHardware {
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        leftFrontMotor.setDirection(DcMotor.Direction.REVERSE);
+        LeftFrontMotor.setDirection(DcMotor.Direction.REVERSE);
         RightFrontMotor.setDirection(DcMotor.Direction.FORWARD);
         LeftRearMotor.setDirection(DcMotor.Direction.REVERSE);
         RightRearMotor.setDirection(DcMotor.Direction.FORWARD);
 
         // If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        LeftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LeftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -59,7 +59,7 @@ public class RobotHardware {
         configurePinpoint();
 
         // Set the location of the robot
-        pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
+        pinpoint.setPosition(new Pose2D(DistanceUnit.CM, 0, 0, AngleUnit.DEGREES, 0));
 
         myOpMode.telemetry.addData(">", "Hardware Initialized");
         myOpMode.telemetry.update();
@@ -75,7 +75,8 @@ public class RobotHardware {
          *  The Y pod offset refers to how far forwards from the tracking point the Y (strafe) odometry pod is.
          *  Forward of center is a positive number, backwards is a negative number.
          */
-        pinpoint.setOffsets(-84.0, -168.0, DistanceUnit.MM); //these are tuned for 3110-0002-0001 Product Insight #1
+        //pinpoint.setOffsets(-84.0, -168.0, DistanceUnit.MM); //these are tuned for 3110-0002-0001 Product Insight #1
+        pinpoint.setOffsets(-84.0, 55, DistanceUnit.MM); //these are tuned for 3110-0002-0001 Product Insight #1
 
         /*
          * Set the kind of pods used by your robot. If you're using goBILDA odometry pods, select either

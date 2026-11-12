@@ -34,33 +34,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
 /*
- * This OpMode illustrates how to use an external "hardware" class to modularize all the robot's sensors and actuators.
- * This approach is very efficient because the same hardware class can be used by all of your teleop and autonomous OpModes
- * without requiring many copy & paste operations.  Once you have defined and tested the hardware class with one OpMode,
- * it is instantly available to other OpModes.
- *
- * The real benefit of this approach is that as you tweak your robot hardware, you only need to make changes in ONE place (the Hardware Class).
- * So, to be effective you should put as much or your hardware setup and access code as possible in the hardware class.
- * Essentially anything you do with hardware in BOTH Teleop and Auto should likely go in the hardware class.
- *
- * The Hardware Class is created in a separate file, and then an "instance" of this class is created in each OpMode.
- * In order for the class to do typical OpMode things (like send telemetry data) it must be passed a reference to the
- * OpMode object when it's created, so it can access all core OpMode functions.  This is illustrated below.
- *
- * In this concept sample, the hardware class file is called RobotHardware.java and it must accompany this sample OpMode.
- * So, if you copy ConceptExternalHardwareClass.java into TeamCode (using Android Studio or OnBotJava) then RobotHardware.java
- * must also be copied to the same location (maintaining its name).
- *
- * For comparison purposes, this sample and its accompanying hardware class duplicates the functionality of the
- * RobotTelopPOV_Linear OpMode.  It assumes three motors (left_drive, right_drive and arm) and two servos (left_hand and right_hand)
- *
- * View the RobotHardware.java class file for more details
- *
- *  Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- *  Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
- *
- *  In OnBot Java, add a new OpMode, select this sample, and select TeleOp.
- *  Also add another new file named RobotHardware.java, select the sample with that name, and select Not an OpMode.
+
+
  */
 
 @TeleOp(name="TeleOpMotorTest", group="Robot")
@@ -83,28 +58,86 @@ public class TeleOpTest extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            drive(-gamepad1.left_stick_y,
+                    gamepad1.left_stick_x,
+                    gamepad1.right_stick_x,
+                    robot);
+            if (gamepad2.y)
+                robot.IntakeMotor.setPower(0.7);
+            if (gamepad2.y == false && gamepad2.x== false)
+                robot.IntakeMotor.setPower(0);
 
+            if (gamepad2.b) {
+                robot.NectorMotor.setPower(0.52);
+                robot.PollenMotor.setPower(0.60);
+            }
 
-            if (gamepad1.x)
-                robot.LeftFrontMotor.setPower(.5);
-            else
-                robot.LeftFrontMotor.setPower(0);
+            if (gamepad2.a) {
+                robot.NectorMotor.setPower(0);
+                robot.PollenMotor.setPower(0);
+            }
+            //this set of code allows us to open the arms causing balls to fall into firing chamber r
+            if (gamepad2.right_trigger > 0.5)
+                robot.NectorOpener.setPosition(robot.NECTOR_OPEN_VALUE);
 
-            if (gamepad1.y)
-                robot.RightFrontMotor.setPower(.5);
-            else
-                robot.RightFrontMotor.setPower(0);
+            if (gamepad2.right_trigger == 0 )
+                robot.NectorOpener.setPosition(robot.NECTOR_CLOSED_VALUE);
 
-            if (gamepad1.b)
-                robot.RightRearMotor.setPower(.5);
-            else
-                robot.RightRearMotor.setPower(0);
+            if (gamepad2.left_trigger > 0.5)
+                robot.PollenOpener.setPosition(robot.POLLEN_OPEN_VALUE);
 
-            if (gamepad1.a)
-                robot.LeftRearMotor.setPower(.5);
-            else
-                robot.LeftRearMotor.setPower(0);
-            sleep(50);
+            if (gamepad2.left_trigger == 0)
+                robot.PollenOpener.setPosition(robot.POLLEN_CLOSED_VALUE);
+
+            if (gamepad2.x)
+                robot.IntakeMotor.setPower(-0.5);
+
+            if (gamepad2.left_bumper)
+                robot.IntakeRelease.setPosition(0.4);
+//            if (gamepad1.x)
+//                robot.LeftFrontMotor.setPower(.5);
+//            else
+//                robot.LeftFrontMotor.setPower(0);
+//
+//            if (gamepad1.y)
+//                robot.RightFrontMotor.setPower(.5);
+//            else
+//                robot.RightFrontMotor.setPower(0);
+//
+//            if (gamepad1.b)
+//                robot.RightRearMotor.setPower(.5);
+//            else
+//                robot.RightRearMotor.setPower(0);
+//
+//            if (gamepad1.a)
+//                robot.LeftRearMotor.setPower(.5);
+//            else
+//                robot.LeftRearMotor.setPower(0);
+//            sleep(50);
         }
+    }
+    public void drive(double forward, double right, double rotate, RobotHardware robot) {
+        // This calculates the power needed for each wheel based on the amount of forward,
+        // strafe right, and rotate
+        double LeftFrontPower = forward + right + rotate;
+        double RightFrontPower = forward - right - rotate;
+        double RightRearPower = forward + right - rotate;
+        double LeftRearPower = forward - right + rotate;
+
+        double maxPower = 1.0;
+        double maxSpeed = 1.0;  // make this slower for outreaches
+
+        // This is needed to make sure we don't pass > 1.0 to any wheel
+        // It allows us to keep all of the motors in proportion to what they should
+        // be and not get clipped
+        maxPower = Math.max(maxPower, Math.abs(LeftFrontPower));
+        maxPower = Math.max(maxPower, Math.abs(RightFrontPower));
+        maxPower = Math.max(maxPower, Math.abs(RightRearPower));
+        maxPower = Math.max(maxPower, Math.abs(LeftRearPower));
+
+        robot.LeftFrontMotor.setPower(LeftFrontPower);
+        robot.RightFrontMotor.setPower(RightFrontPower);
+        robot.RightRearMotor.setPower(RightRearPower);
+        robot.LeftRearMotor.setPower(LeftRearPower);
     }
 }

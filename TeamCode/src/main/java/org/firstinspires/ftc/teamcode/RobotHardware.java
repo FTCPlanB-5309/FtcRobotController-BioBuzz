@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -18,6 +20,13 @@ public class RobotHardware {
     public DcMotor RightFrontMotor  = null;
     public DcMotor LeftRearMotor = null;
     public DcMotor RightRearMotor = null;
+    public DcMotor IntakeMotor = null;
+    public DcMotor PollenMotor = null;
+    public DcMotor NectorMotor = null;
+
+    public Servo NectorOpener = null;
+    public Servo PollenOpener = null;
+    public Servo IntakeRelease = null;
 
     // Create an instance of the sensor
     GoBildaPinpointDriver pinpoint;
@@ -26,6 +35,12 @@ public class RobotHardware {
     public RobotHardware (LinearOpMode opmode) {
         myOpMode = opmode;
     }
+
+    // Constants
+    public double NECTOR_OPEN_VALUE = 0.5;
+    public double NECTOR_CLOSED_VALUE = 0.8;
+    public double POLLEN_OPEN_VALUE = 0.5;
+    public double POLLEN_CLOSED_VALUE = 0.8;
 
     /**
      * Initialize all the robot's hardware.
@@ -39,7 +54,13 @@ public class RobotHardware {
         RightFrontMotor = myOpMode.hardwareMap.get(DcMotor.class, "RightFrontMotor");
         LeftRearMotor  = myOpMode.hardwareMap.get(DcMotor.class, "LeftRearMotor");
         RightRearMotor = myOpMode.hardwareMap.get(DcMotor.class, "RightRearMotor");
+        IntakeMotor = myOpMode.hardwareMap.get(DcMotor.class,"IntakeMotor");
+        PollenMotor = myOpMode.hardwareMap.get(DcMotor.class,"PollenMotor");
+        NectorMotor = myOpMode.hardwareMap.get(DcMotor.class,"NectorMotor");
 
+        NectorOpener = myOpMode.hardwareMap.get(Servo.class, "NectorOpener");
+        PollenOpener = myOpMode.hardwareMap.get(Servo.class, "PollenOpener");
+        IntakeRelease = myOpMode.hardwareMap.get(Servo.class, "IntakeRelease");
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
@@ -47,12 +68,15 @@ public class RobotHardware {
         RightFrontMotor.setDirection(DcMotor.Direction.FORWARD);
         LeftRearMotor.setDirection(DcMotor.Direction.REVERSE);
         RightRearMotor.setDirection(DcMotor.Direction.FORWARD);
-
+        IntakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        PollenMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         // If there are encoders connected, switch to RUN_USING_ENCODER mode for greater accuracy
         LeftFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RightFrontMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LeftRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         RightRearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        PollenMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        NectorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Get a reference to the GoBilda odometery sensor and configure it
         pinpoint = myOpMode.hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");

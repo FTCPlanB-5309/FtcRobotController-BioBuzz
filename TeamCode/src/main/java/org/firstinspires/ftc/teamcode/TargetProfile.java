@@ -5,24 +5,24 @@ package org.firstinspires.ftc.teamcode;
 // fast to move, how close to get before slowing down, and time allowed for the trip in seconds.
 //
 public class TargetProfile {
-        double maxSpeed;
-        double minSpeed;
-        double distanceVarianceAllowed;
-        double angleVarianceAllowed;
-        double StartToSlowAt;
-        double timeAllowed;
+    double maxSpeed;
+    double minSpeed;
+    double distanceVarianceAllowed;
+    double angleVarianceAllowed;
+    double StartToSlowAt;
+    double timeAllowed;
 
-        public TargetProfile(double maxSpeed,
-                             double minSpeed,
-                             double maxDistance,
-                             double angleVarianceAllowed,
-                             double startSlowDown,
-                             double timeAllowed){
-            this.maxSpeed = maxSpeed;
-            this.minSpeed = minSpeed;
-            this.distanceVarianceAllowed = maxDistance;
-            this.angleVarianceAllowed = angleVarianceAllowed;
-            this.StartToSlowAt = startSlowDown;
-            this.timeAllowed = timeAllowed;
-        }
+    public TargetProfile(double maxSpeed,
+                         double minSpeed,
+                         double maxDistance,
+                         double angleVarianceAllowed,
+                         double startSlowDown,
+                         double timeAllowed){
+        this.maxSpeed = maxSpeed;
+        this.minSpeed = minSpeed;
+        this.distanceVarianceAllowed = maxDistance;
+        this.angleVarianceAllowed = angleVarianceAllowed;
+        this.StartToSlowAt = startSlowDown;
+        this.timeAllowed = timeAllowed;
     }
+}

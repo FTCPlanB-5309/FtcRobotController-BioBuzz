@@ -87,7 +87,7 @@ public class DriveTrain {
         double denominator;
 
         getDistanceToTarget(pos, target);
-        //telemetry.addData("distance to target", distanceToTarget);
+        telemetry.addData("distance to target", distanceToTarget);
 
         sin = Math.sin(pos.getHeading(AngleUnit.RADIANS));
         cos = Math.cos(pos.getHeading(AngleUnit.RADIANS));
@@ -95,17 +95,19 @@ public class DriveTrain {
         //y2=sinβx1+cosβy1
         x2 = (cos * diff_x) - (sin * diff_y);
         y2 = (sin * diff_x) + (cos * diff_y);
-        denominator = Math.max(Math.abs(y2) + Math.abs(x2), 1);
+
+        //denominator = Math.max(Math.abs(y2) + Math.abs(x2), 1);
+        denominator = Math.max((x2-y2), (x2+y2));
 
         lfVectorSpeed = (x2 - y2 ) / denominator;
         rfVectorSpeed = (x2 + y2 ) / denominator;
         lrVectorSpeed = (x2 + y2 ) / denominator;
         rrVectorSpeed = (x2 - y2 ) / denominator;
 
-//        if (distanceToTarget > target.tp.StartToSlowAt )
-//            speedFactor = target.tp.maxSpeed;
-//        else
-//            speedFactor = (distanceToTarget / target.tp.StartToSlowAt) * target.tp.maxSpeed;
+        if (distanceToTarget > target.tp.StartToSlowAt )
+            speedFactor = target.tp.maxSpeed;
+        else
+            speedFactor = (distanceToTarget / target.tp.StartToSlowAt) * target.tp.maxSpeed;
 
         lfVectorSpeed = lfVectorSpeed * speedFactor;
         rfVectorSpeed = rfVectorSpeed * speedFactor;

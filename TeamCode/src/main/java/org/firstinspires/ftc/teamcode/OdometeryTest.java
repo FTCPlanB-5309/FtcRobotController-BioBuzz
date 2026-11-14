@@ -16,10 +16,10 @@ public class OdometeryTest extends LinearOpMode {
 
     RobotHardware robot       = new RobotHardware(this);
     // This is a list of targets
-    TargetProfile way_point = new TargetProfile(.5,.08,10,3, 5, 3);
+    TargetProfile way_point = new TargetProfile(.5,.08,5,3, 5, 3);
 
     // List of Targets
-    Target firstTarget = new Target(30, 15, 30, way_point);
+    Target firstTarget = new Target(-30, -15, 0, way_point);
     Target secondTarget = new Target(20, -20, -45, way_point);
 
 
@@ -30,17 +30,18 @@ public class OdometeryTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         DriveTrain driveTrain = new DriveTrain (robot, telemetry, this);
+        TelemeteryTest telemeteryTest = new TelemeteryTest(robot, telemetry, this);
         robot.init();   // Initialize the various hardware components
 
         // Wait for the game to start (driver presses START)
         waitForStart();
 
         // Go thru a series of moves and actions based on a set target positions
-        moveCode = driveTrain.moveTo(firstTarget, telemetry);
-        //moveCode = driveTrain.moveTo(secondTarget);
-        telemetry.addData("moveCode", moveCode);
-        telemetry.update();
+//        moveCode = driveTrain.moveTo(secondTarget);
+//        telemetry.addData("moveCode", moveCode);
+//        telemetry.update();
 
+        driveTrain.moveTo(firstTarget);
         Thread.sleep(30000);
         //moveCode = driveTrain.goTo(secondTarget);
     }

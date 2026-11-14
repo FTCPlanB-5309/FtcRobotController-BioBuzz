@@ -33,12 +33,16 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+
 /*
 
 
  */
 
-@TeleOp(name="TeleOpMotorTest", group="Robot")
+@TeleOp(name="TeleOp", group="Robot")
 public class TeleOpTest extends LinearOpMode {
 
     // Create a RobotHardware object to be used to access robot hardware.
@@ -58,6 +62,14 @@ public class TeleOpTest extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            robot.pinpoint.update();   // Get the current position of the Robot
+            Pose2D pos = robot.pinpoint.getPosition();
+            telemetry.addData("pos: ","x: %.2f, y: %.2f, h: %.2f",
+                    pos.getX(DistanceUnit.CM),
+                    pos.getY(DistanceUnit.CM),
+                    pos.getHeading(AngleUnit.DEGREES));
+            telemetry.update();
+
             drive(-gamepad1.left_stick_y,
                     gamepad1.left_stick_x,
                     gamepad1.right_stick_x,

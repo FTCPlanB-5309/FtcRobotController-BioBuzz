@@ -49,6 +49,11 @@ public class DriveTrain {
         this.opMode = opMode;
     }
 
+    public void printSomehting()
+    {
+        telemetry.addData("This Something", true);
+        telemetry.update();
+    }
     public void stop()
     {
         robot.LeftFrontMotor.setPower(0);
@@ -81,13 +86,15 @@ public class DriveTrain {
     // are set to drive the robot to the target, but ignores the angle it's facing
     // when it gets there
     //
-    public void findMotorVectorSpeed (Target target, Pose2D pos) {
+    public void findMotorVectorSpeed (Target target, Pose2D pos) throws InterruptedException {
         double sin;
         double cos;
         double denominator;
 
         getDistanceToTarget(pos, target);
+
         telemetry.addData("distance to target", distanceToTarget);
+
 
         sin = Math.sin(pos.getHeading(AngleUnit.RADIANS));
         cos = Math.cos(pos.getHeading(AngleUnit.RADIANS));
@@ -96,13 +103,14 @@ public class DriveTrain {
         x2 = (cos * diff_x) - (sin * diff_y);
         y2 = (sin * diff_x) + (cos * diff_y);
 
-        //denominator = Math.max(Math.abs(y2) + Math.abs(x2), 1);
-        denominator = Math.max((x2-y2), (x2+y2));
+
+        denominator = Math.max(Math.abs(y2) + Math.abs(x2), 1);
 
         lfVectorSpeed = (x2 - y2 ) / denominator;
         rfVectorSpeed = (x2 + y2 ) / denominator;
         lrVectorSpeed = (x2 + y2 ) / denominator;
         rrVectorSpeed = (x2 - y2 ) / denominator;
+
 
         if (distanceToTarget > target.tp.StartToSlowAt )
             speedFactor = target.tp.maxSpeed;
@@ -169,11 +177,8 @@ public class DriveTrain {
 
     // This method checks to status of the goTo command...Time, x, y, and angle
     // It returns the move code accordingly
-    public MoveCode goToStatus(double elaspedTime, Target target, Pose2D pos)
+    public MoveCode goToStatus(double elaspedTime, Target target, Pose2D pos) throws InterruptedException
     {
-        double diff_x;
-        double diff_y;
-
         getDistanceToTarget(pos, target);
         if (elaspedTime >= target.tp.timeAllowed)
             return MoveCode.TimedOut;
@@ -184,7 +189,7 @@ public class DriveTrain {
     }
 
     // This method gets the robot to move to the desired target
-    public MoveCode moveTo(Target atarget, Telemetry telemetry)  throws InterruptedException {
+    public MoveCode moveTo(Target atarget)  throws InterruptedException {
         int loopCount = 0;
         MoveCode moveCode = MoveCode.NotDone;
         ElapsedTime runtime = new ElapsedTime();   // time the move
@@ -192,23 +197,29 @@ public class DriveTrain {
 
         robot.pinpoint.update();   // Get the current position of the Robot
         Pose2D pos = robot.pinpoint.getPosition();
+        telemetry.addData("time to move", atarget.tp.timeAllowed);
+        telemetry.update();
 
         while ( moveCode == MoveCode.NotDone && opMode.opModeIsActive()) {
+            //Thread.sleep(1000);
             findMotorVectorSpeed(atarget, pos);  // straight line motor speeds
 
-            //findMotorTurnSpeeds(atarget, pos);   // find turn motor speeds
+//
+//            //findMotorTurnSpeeds(atarget, pos);   // find turn motor speeds
             combineMotorSpeeds();
+//            telemetry.addData("Vector Speeds: ","lfv: %.2f, rfV: %.2f, lrv: %.2f, rrV: %.2f",
+//                    lfSpeed, rfSpeed,lrSpeed,rrSpeed);
+//            telemetry.update();
+//            Thread.sleep(1000);
             turnMotorsOn();
             robot.pinpoint.update();   // Get the current position of the Robot
             pos = robot.pinpoint.getPosition();
-
-            // get the status of the move (position and time)
+//
+//            // get the status of the move (position and time)
             moveCode = goToStatus(runtime.seconds(), atarget, pos);
-            loopCount++;
-            if (loopCount > 300)
-                moveCode = MoveCode.Diagnostic;
-            if (runtime.seconds() > atarget.tp.timeAllowed)
-                moveCode = MoveCode.TimedOut;
+            telemetry.addData("distanceToTarget", distanceToTarget);
+            telemetry.update();
+            Thread.sleep(100);
         }
         pos = robot.pinpoint.getPosition();
 
@@ -222,6 +233,7 @@ public class DriveTrain {
                 pos.getX(DistanceUnit.CM),
                 pos.getY(DistanceUnit.CM),
                 pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Move Code", moveCode);
         telemetry.update();
 
         stop();  // we ran out of time or we are at the desired location
